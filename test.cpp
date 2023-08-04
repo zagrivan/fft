@@ -48,12 +48,12 @@ namespace test {
         for (int i = 0; i < 30; ++i) {
             x_mix[i] = i + 1;
         }
-        std::vector<complex> out2 = FFT::fft(x2, false);
+        std::vector<complex> out2 = FFT::fft(x2, false); // прямое fft
         std::vector<complex> out3 = FFT::fft(x3, false);
         std::vector<complex> out5 = FFT::fft(x5, false);
         std::vector<complex> out_mix = FFT::fft(x_mix, false);
 
-        std::vector<complex> x2_after = FFT::fft(out2, true);
+        std::vector<complex> x2_after = FFT::fft(out2, true); // обратное fft
         std::vector<complex> x3_after = FFT::fft(out3, true);
         std::vector<complex> x5_after = FFT::fft(out5, true);
         std::vector<complex> x_mix_after = FFT::fft(out_mix, true);
