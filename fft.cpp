@@ -194,7 +194,7 @@ void FFT::fft_mix_radix(std::vector<complex> &x, double direction) {
 
         for (int i = 0; i < N; ++i) {
             int index = i % (N / 5);
-            x[i] = p0[index] + p1[index] * w + p2[index] * w * w + p3[index] * w * w * w + p4[index] * w * w * w * w;
+            x[i] = p0[index] + p1[index] * w + p2[index] * w * w + p3[index] * std::pow(w, 3) + p4[index] * std::pow(w, 4);
             w *= wn;
         }
     }

@@ -8,6 +8,7 @@ namespace test {
     void print_imag(const std::vector<complex>& x);
     void print_abs(const std::vector<complex>& x);
     std::vector<complex> dft(const std::vector<complex> &x);
+    void test_fft();
 }
 
 
