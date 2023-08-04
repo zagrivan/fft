@@ -1,7 +1,7 @@
 # fft
 ### Класс, реализующий быстрое преобразование фурье для длинны преобразования кратной 2, 3, 5.
 
-В функцию 
+В функцию `fft()`, определенную в классе `FFT`,
 ```c++
 typedef std::complex<double> complex;
 FFT::fft(const std::vector<complex> &in, bool inverse);
