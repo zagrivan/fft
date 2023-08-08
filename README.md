@@ -4,7 +4,7 @@
 В функцию `fft()`, определенную в классе `FFT`,
 ```c++
 typedef std::complex<double> complex;
-FFT::fft(const std::vector<complex> &in, bool inverse);
+std::vector<complex> FFT::fft(const std::vector<complex> &in, bool inverse);
 ```
 передается входная последовательность .
 Для прямого преобразования `inverse = false`, для обратного `inverse = true`. Длина последовательности должна быть составным числом, кратным только 2, 3, 5.
