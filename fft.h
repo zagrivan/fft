@@ -10,7 +10,8 @@
 typedef std::complex<double> complex;
 
 const complex J(0, 1);
-const double sinPi3 = std::sin(M_PI / 3.); // для radix3
+// для radix3
+const double sinPi3 = std::sin(M_PI / 3.);
 // для radix5
 const complex w51(cos(-2. * M_PI / 5), sin(-2. * M_PI / 5));  // exp(-2πi*1/5)
 const complex w52(cos(-4. * M_PI / 5), sin(-4. * M_PI / 5)); // exp(-2πi*2/5)
@@ -24,6 +25,7 @@ public:
     static std::vector<complex> fft(const std::vector<complex> &in, bool inverse);
 private:
     FFT()= default;
+    ~FFT()= default;
 
     static int radix(int n);
 
