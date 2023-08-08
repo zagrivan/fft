@@ -39,7 +39,22 @@ unsigned int FFT::bitReverse(unsigned int x, int log2n) {
     return n;
 }
 
-std::vector<complex> FFT::fft_2_iterative(const std::vector<complex> &xt, double direction) {
+void FFT::reorder_base_r(std::vector<complex> &x, int radix, int n) {
+    for (int i = 0, j = 0; i < n - 1; ++i) {
+        if (i < j) {
+            std::swap(x[i], x[j]);
+        }
+        int k = (radix - 1) * n / radix;
+        while (k <= j) {
+            j -= k;
+            k /= radix;
+        }
+        j += k / (radix - 1);
+    }
+}
+
+
+std::vector<complex> FFT::radix2(const std::vector<complex> &xt, double direction) {
     int n = (int) xt.size();
     int log2n = (int) std::log2(n);
     std::vector<complex> Xf(n);
@@ -64,71 +79,69 @@ std::vector<complex> FFT::fft_2_iterative(const std::vector<complex> &xt, double
     return Xf;
 }
 
-void FFT::fft_radix3_rec(std::vector<complex> &x, double direction) {
-    int N = (int) x.size();
-    if (N == 1) return;
+std::vector<complex> FFT::radix3(std::vector<complex> x, double direction) {
+    const int r = 3;
+    int n = (int) x.size();
 
-    std::vector<complex> p0(N / 3), p1(N / 3), p2(N / 3);
+    reorder_base_r(x, r, n);
 
-    for (int i = 0; i < N / 3; ++i) {
-        p0[i] = x[3 * i];
-        p1[i] = x[3 * i + 1];
-        p2[i] = x[3 * i + 2];
+    for (int m = r; m <= n; m *= r) {
+        complex w(1, 0);
+        complex wn = std::polar(1., direction * 2 * M_PI / m);
+        for (int i = 0; i < m / r; ++i) {
+            for (int j = 0; j < n; j += m) {
+                complex t0 = x[i + j + m / r] * w + x[i + j + 2 * m / r] * w * w;
+                complex t1 = x[i + j] - t0 / 2.;
+                complex t2 = J * sinPi3 * (x[i + j + m / r] * w - x[i + j + 2 * m / r] * w * w) * direction;
+
+                x[i + j] += t0;
+                x[i + j + m / r] = t1 + t2;
+                x[i + j + 2 * m / r] = t1 - t2;
+            }
+            w *= wn;
+        }
     }
 
-    fft_radix3_rec(p0, direction);
-    fft_radix3_rec(p1, direction);
-    fft_radix3_rec(p2, direction);
-
-    complex w = 1;
-    complex wn = std::polar(1., direction * 2 * M_PI / N);
-
-    for (int i = 0; i < N / 3; ++i) {
-        complex t0 = w * p1[i] + w * w * p2[i];
-        complex t1 = p0[i] - t0 / 2.0;
-        complex t2 = J * sinPi3 * (w * p1[i] - w * w * p2[i]) * direction;
-
-        x[i] = p0[i] + t0;
-        x[i + N / 3] = t1 + t2;
-        x[i + 2 * N / 3] = t1 - t2;
-
-        w *= wn;
-    }
+    return x;
 }
 
+std::vector<complex> FFT::radix5(std::vector<complex> x, double direction) {
+    const int r = 5;
+    int n = (int) x.size();
 
-void FFT::fft_radix5_rec(std::vector<complex> &x, double direction) {
-    int N = (int) x.size();
-    if (N == 1) return;
+    reorder_base_r(x, r, n);
 
-    std::vector<complex> p0(N / 5), p1(N / 5), p2(N / 5), p3(N / 5), p4(N / 5);
+    for (int m = r; m <= n; m *= r) {
+        complex w(1, 0);
+        complex wn = std::polar(1., direction * 2 * M_PI / m);
+        for (int i = 0; i < m / r; ++i) {
+            for (int j = 0; j < n; j += m) {
+                complex t0 = x[i + j];
+                complex t1 = x[i + j + m / r] * w;
+                complex t2 = x[i + j + 2 * m / r] * w * w;
+                complex t3 = x[i + j + 3 * m / r] * w * w * w;
+                complex t4 = x[i + j + 4 * m / r] * w * w * w * w;
 
-    for (int i = 0; i < N / 5; ++i) {
-        p0[i] = x[5 * i];
-        p1[i] = x[5 * i + 1];
-        p2[i] = x[5 * i + 2];
-        p3[i] = x[5 * i + 3];
-        p4[i] = x[5 * i + 4];
+                x[i + j] += t1 + t2 + t3 + t4;
+                if (direction < 0) {  // прямое
+                    x[i + j + m / r] = t0 + t1 * w51 + t2 * w52 + t3 * w53 + t4 * w54;
+                    x[i + j + 2 * m / r] = t0 + t1 * w52 + t2 * w54 + t3 * w51 + t4 * w53;
+                    x[i + j + 3 * m / r] = t0 + t1 * w53 + t2 * w51 + t3 * w54 + t4 * w52;
+                    x[i + j + 4 * m / r] = t0 + t1 * w54 + t2 * w53 + t3 * w52 + t4 * w51;
+                } else {    // обратное
+                    x[i + j + m / r] = t0 + t1 * w54 + t2 * w53 + t3 * w52 + t4 * w51;
+                    x[i + j + 2 * m / r] = t0 + t1 * w53 + t2 * w51 + t3 * w54 + t4 * w52;
+                    x[i + j + 3 * m / r] = t0 + t1 * w52 + t2 * w54 + t3 * w51 + t4 * w53;
+                    x[i + j + 4 * m / r] = t0 + t1 * w51 + t2 * w52 + t3 * w53 + t4 * w54;
+                }
+            }
+            w *= wn;
+        }
     }
-
-    fft_radix5_rec(p0, direction);
-    fft_radix5_rec(p1, direction);
-    fft_radix5_rec(p2, direction);
-    fft_radix5_rec(p3, direction);
-    fft_radix5_rec(p4, direction);
-
-    complex w = 1;
-    complex wn = std::polar(1., direction * 2 * M_PI / N);
-
-    for (int i = 0; i < N; ++i) {
-        int index = i % (N / 5);
-        x[i] = p0[index] + p1[index] * w + p2[index] * std::pow(w, 2) + p3[index] * std::pow(w, 3) + p4[index] * std::pow(w, 4);
-        w *= wn;
-    }
+    return x;
 }
 
-
-void FFT::fft_mix_radix(std::vector<complex> &x, double direction) {
+void FFT::radix_mix(std::vector<complex> &x, double direction) {
     int N = (int) x.size();
     if (N == 1) return;
 
@@ -143,8 +156,8 @@ void FFT::fft_mix_radix(std::vector<complex> &x, double direction) {
             p1[i] = x[2 * i + 1];
         }
 
-        fft_mix_radix(p0, direction);
-        fft_mix_radix(p1, direction);
+        radix_mix(p0, direction);
+        radix_mix(p1, direction);
 
         for (int i = 0; i < N / 2; ++i) {
             x[i] = p0[i] + w * p1[i];
@@ -160,9 +173,9 @@ void FFT::fft_mix_radix(std::vector<complex> &x, double direction) {
             p2[i] = x[3 * i + 2];
         }
 
-        fft_mix_radix(p0, direction);
-        fft_mix_radix(p1, direction);
-        fft_mix_radix(p2, direction);
+        radix_mix(p0, direction);
+        radix_mix(p1, direction);
+        radix_mix(p2, direction);
 
         for (int i = 0; i < N / 3; ++i) {
             complex t0 = w * p1[i] + w * w * p2[i];
@@ -186,15 +199,32 @@ void FFT::fft_mix_radix(std::vector<complex> &x, double direction) {
             p4[i] = x[5 * i + 4];
         }
 
-        fft_mix_radix(p0, direction);
-        fft_mix_radix(p1, direction);
-        fft_mix_radix(p2, direction);
-        fft_mix_radix(p3, direction);
-        fft_mix_radix(p4, direction);
+        radix_mix(p0, direction);
+        radix_mix(p1, direction);
+        radix_mix(p2, direction);
+        radix_mix(p3, direction);
+        radix_mix(p4, direction);
 
-        for (int i = 0; i < N; ++i) {
-            int index = i % (N / 5);
-            x[i] = p0[index] + p1[index] * w + p2[index] * w * w + p3[index] * std::pow(w, 3) + p4[index] * std::pow(w, 4);
+        for (int i = 0; i < N / 5; ++i) {
+            complex t0 = p0[i];
+            complex t1 = p1[i] * w;
+            complex t2 = p2[i] * w * w;
+            complex t3 = p3[i] * w * w * w;
+            complex t4 = p4[i] * w * w * w * w;
+
+            x[i] = t0 + t1 + t2 + t3 + t4;
+            if (direction < 0) {  // прямое
+                x[i + N / 5] = t0 + t1 * w51 + t2 * w52 + t3 * w53 + t4 * w54;
+                x[i + 2 * N / 5] = t0 + t1 * w52 + t2 * w54 + t3 * w51 + t4 * w53;
+                x[i + 3 * N / 5] = t0 + t1 * w53 + t2 * w51 + t3 * w54 + t4 * w52;
+                x[i + 4 * N / 5] = t0 + t1 * w54 + t2 * w53 + t3 * w52 + t4 * w51;
+            } else {    // обратное
+                x[i + N / 5] = t0 + t1 * w54 + t2 * w53 + t3 * w52 + t4 * w51;
+                x[i + 2 * N / 5] = t0 + t1 * w53 + t2 * w51 + t3 * w54 + t4 * w52;
+                x[i + 3 * N / 5] = t0 + t1 * w52 + t2 * w54 + t3 * w51 + t4 * w53;
+                x[i + 4 * N / 5] = t0 + t1 * w51 + t2 * w52 + t3 * w53 + t4 * w54;
+            }
+
             w *= wn;
         }
     }
@@ -203,9 +233,9 @@ void FFT::fft_mix_radix(std::vector<complex> &x, double direction) {
 
 std::vector<complex> FFT::fft(const std::vector<complex> &in, bool inverse) {
     int N = (int) in.size();
-    if (N == 0) return {};
+    if (N < 2) return in;
     int rdx = FFT::radix(N);
-    double direction = inverse ? 1 : -1;
+    double direction = inverse ? 1 : -1; // 1 - обратное, -1 - прямое
 
     if (rdx == -1) {
         std::cerr << "The length of the sequence must be a multiple of only 2, 3 and 5\n";
@@ -215,16 +245,17 @@ std::vector<complex> FFT::fft(const std::vector<complex> &in, bool inverse) {
     std::vector<complex> out;
 
     if (rdx == 2) {
-        out = FFT::fft_2_iterative(in, direction);
-    } else {
+        out = FFT::radix2(in, direction);
+    }
+    else if (rdx == 3) {
+        out = FFT::radix3(in, direction);
+    }
+    else if (rdx == 5) {
+        out = FFT::radix5(in, direction);
+    }
+    else if (rdx == 30) {
         out = in;
-        if (rdx == 3) {
-            FFT::fft_radix3_rec(out, direction);
-        } else if (rdx == 5) {
-            FFT::fft_radix5_rec(out, direction);
-        } else if (rdx == 30) {
-            FFT::fft_mix_radix(out, direction);
-        }
+        FFT::radix_mix(out, direction);
     }
 
     if (inverse) {

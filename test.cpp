@@ -36,6 +36,25 @@ namespace test {
         return spectraComplex;
     }
 
+    std::vector<complex> get_cos(int n, double f, double Ts) {
+        std::vector<complex> out(n);
+        for (int i = 0; i < n; ++i) {
+            out[i] = std::cos(2. * M_PI * f * i * Ts) + 0.1 * std::cos(2. * M_PI * (f + 6.79) * i * Ts) + 0.113 * std::sin(2. * M_PI * (f + 2.3) * i * Ts) + 3 * std::sin(2. * M_PI * (f / 4) * i * Ts);
+        }
+        return out;
+    }
+
+    std::vector<complex> get_sin_t_t(int n, double f, double Ts) {
+        std::vector<complex> out(n);
+        for (int i = -n / 2, j = 0; i < n / 2; ++i, ++j) {
+            if (i == 0) {
+                out[j] = out[j - 1];
+                continue;
+            }
+            out[j] = std::sin(2. * M_PI * f * i * Ts) / (i * Ts);
+        }
+        return out;
+    }
 
     void test_fft() {
         std::vector<complex> x2{1, 2, 3, 4, 5, 6, 7, 8};
