@@ -8,7 +8,7 @@ int FFT::radix(int n) {
     if ((n & (n - 1)) == 0) {
         return 2;
     }
-    for (int i = 3; i <= 5; i += 2) {
+    for (int i = 3; i <= 5; i += 2) { // проверка для 3 и 5
         int n1 = n;
         while (n1 % i == 0) {
             n1 /= i;
@@ -19,8 +19,9 @@ int FFT::radix(int n) {
     while (n % 2 == 0) n /= 2;
     while (n % 3 == 0) n /= 3;
     while (n % 5 == 0) n /= 5;
-    if (n == 1) return 30;
-    return -1;
+    if (n == 1)
+        return 30; // если число n состоит из нескольких простых чисел
+    return -1;  // если одно из простых чисел больше 5
 }
 
 void FFT::add_zeros(std::vector<complex> &p) {
@@ -39,6 +40,7 @@ unsigned int FFT::bitReverse(unsigned int x, int log2n) {
     return n;
 }
 
+// для итеративных версий radix 3 и 5, перестанавливает входные значения для fft
 void FFT::reorder_base_r(std::vector<complex> &x, int radix, int n) {
     for (int i = 0, j = 0; i < n - 1; ++i) {
         if (i < j) {
@@ -65,7 +67,7 @@ std::vector<complex> FFT::radix2(const std::vector<complex> &xt, double directio
         int m = 1 << s; // 2 ** s
         int m2 = m >> 1; // 2 ** s / 2
         complex w(1, 0);
-        complex wn = std::polar(1., direction * 2 * M_PI / m);
+        complex wn = std::polar(1., direction * 2 * M_PI / m); // exp(-1 * 2*PI/m) - прямое, exp(1 * 2*PI/m) - обратное
         for (int j = 0; j < m2; ++j) {
             for (int k = j; k < n; k += m) {
                 complex a = Xf[k];
@@ -141,6 +143,7 @@ std::vector<complex> FFT::radix5(std::vector<complex> x, double direction) {
     return x;
 }
 
+// для случая, когда длина последовательности кратна нескольким простым числам(2, 3, 5), fft вычисляется рекурсивно
 void FFT::radix_mix(std::vector<complex> &x, double direction) {
     int N = (int) x.size();
     if (N == 1) return;
@@ -229,7 +232,6 @@ void FFT::radix_mix(std::vector<complex> &x, double direction) {
         }
     }
 }
-
 
 std::vector<complex> FFT::fft(const std::vector<complex> &in, bool inverse) {
     int N = (int) in.size();
