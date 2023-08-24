@@ -246,21 +246,21 @@ std::vector<complex> FFT::fft(const std::vector<complex> &in, bool inverse) {
 
     std::vector<complex> out;
 
-    if (rdx == 2) {
+    if (rdx == 2) { // если длина кратна только степени 2
         out = FFT::radix2(in, direction);
     }
-    else if (rdx == 3) {
+    else if (rdx == 3) {  // если длина кратна только степени 3
         out = FFT::radix3(in, direction);
     }
-    else if (rdx == 5) {
+    else if (rdx == 5) { // если длина кратна только степени 5
         out = FFT::radix5(in, direction);
     }
-    else if (rdx == 30) {
+    else if (rdx == 30) { // если длина составное число из 2, 3 и 5
         out = in;
         FFT::radix_mix(out, direction);
     }
 
-    if (inverse) {
+    if (inverse) {  // для обратного fft
         for (complex &val: out) {
             val /= N;
         }
