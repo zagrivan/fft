@@ -3,6 +3,13 @@
 
 namespace test {
 
+    void print_complex(const std::vector<complex> &x) {
+        for (const complex& c : x) {
+            std::cout << c << ", ";
+        }
+        std::cout << '\n';
+    }
+
     void print_real(const std::vector<complex> &x) {
         for (const complex &val: x) {
             std::cout << val.real() << ", ";

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <complex>
 #include <vector>
 
@@ -6,19 +5,21 @@
 #include "test.h"
 
 
-int main(int argc, char *argv[]) {
+int main() {
     // длина последовательности 2^9 = 512
     int n = (int) std::pow(2, 9);
     // генерируем n отсчетов, представляющих сумму 4 cos с минимальной частотой f=0.3
-    std::vector<complex> in = test::get_cos(n, 0.3, 10.0 / n);
+    std::vector<complex> seq = test::get_cos(n, 0.3, 10.0 / n);
 
-    std::vector<complex> after_fft = FFT::fft(in, false); // forward fft
+    test::print_complex(seq); // перед преобразованием
 
-    std::vector<complex> after_inverse_fft = FFT::fft(after_fft, true); // backward fft
+    FFT::fft(seq, false); // forward fft
 
-    test::print_real(in);
-    test::print_abs(after_fft);  // вывод комплексного числа по модулю( sqrt( real^2 + imag^2 ) )
-    test::print_real(after_inverse_fft);
+    test::print_complex(seq); // после прямого
+
+    FFT::fft(seq, true); // backward fft
+
+    test::print_complex(seq); // после обратного
 
     return 0;
 }
