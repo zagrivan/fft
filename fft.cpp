@@ -8,8 +8,8 @@ int FFT::validate(int n) {
     while (n % 3 == 0) n /= 3;
     while (n % 5 == 0) n /= 5;
     if (n == 1)
-        return 30; // если число n состоит из нескольких простых чисел
-    return -1;  // если одно из простых чисел больше 5
+        return 1; // если число n состоит из нескольких простых чисел, меньших 7
+    return -1;  // если одно из простых чисел больше или равно 7
 }
 
 void FFT::radix2(std::vector<complex> &x, double direction) {
