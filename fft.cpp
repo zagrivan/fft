@@ -135,7 +135,7 @@ void FFT::fft(std::vector<complex> &in, bool inverse) {
         throw std::exception();
     }
 
-    FFT::radix_mix(in, direction); /// вычисление fft
+    radix_mix(in, direction); /// вычисление fft
 
     if (inverse) {                   // для обратного fft умножение на 1/N
         for (complex &val: in) {
